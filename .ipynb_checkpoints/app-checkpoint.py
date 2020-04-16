@@ -2,12 +2,17 @@ import flask
 import numpy as np
 from flask import Flask, request, jsonify, render_template
 import pickle
+import sys
+sys.path.insert(1,"./src")
+#%load_ext autoreload
+#%autoreload 2
 from model import run_model
 from IPython.core.debugger import set_trace
-from model import dummy_model
+from model import dummy_model,run_model,smart_model
 
 # App definition
-app = Flask(__name__,template_folder='templates')    
+app = Flask(__name__,template_folder='templates')
+
 
 @app.route('/')
 def home():
@@ -16,7 +21,7 @@ def home():
 @app.route('/trainmodel',methods=['GET'])
 def trainmodel():
     try:
-        run_model()
+        run_model(nb_epochs=1)
         resp = jsonify(success=True)
         resp.status_code = 200
         return resp
@@ -27,18 +32,17 @@ def trainmodel():
     
 @app.route('/predictGUI',methods=['POST'])
 def predictGUI():
-    set_trace()
-    data = request.form.get('filename')
-    prediction = dummy_model(data)
-
-    return render_template('index.html', emotion_pred='Emotion predicted {}'.format(prediction))
+    file_name = request.form.get('filename')
+    prediction = smart_model(file_name)
+    return render_template('index.html', 
+                           emotion_pred='Emotion predicted: {}'.format(prediction['predicted']),
+                           emotion_target='Real emotion: {}'.format(prediction['true_label']))
 
 @app.route('/predict',methods=['POST'])
 def predict():
     try:
-        #set_trace()
-        data = request.args.get('filename')
-        prediction = dummy_model(data)
+        file_name = request.args.get('filename')
+        prediction = smart_model(file_name)
         return jsonify(prediction)
     except:
         #TODO: handle better the exceptions s.t. a clean messages displays in PostMan
@@ -49,9 +53,8 @@ def predict():
 @app.route('/predictJSON',methods=['POST'])
 def predictJSON():
     try:
-        set_trace()
         data = request.get_json(force=True)
-        prediction = {val[0]:dummy_model(val[1]) for val in data.items()}
+        prediction = {val[0]:smart_model(val[1]) for val in data.items()}
 
         return jsonify(prediction)
     except:
