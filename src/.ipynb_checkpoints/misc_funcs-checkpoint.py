@@ -71,9 +71,9 @@ def get_mfcc(data,sfs):
     ret = np.array([mfcc(x,sf,num_cepstral=39) for x,sf in zip(data,sfs)])
     return np.expand_dims(ret,axis=1)
 
-def save_mfcc_data(file_names,data,targets):
+def save_mfcc_data(file_names,data_f,targets):
     Path("data/mfcc").mkdir(parents=False, exist_ok=True)
-    for file,smple,target in zip(file_names,data,targets):
+    for file,smple,target in zip(file_names,data_f,targets):
         file_name = file +".pkl"
         with open(os.path.join("data/mfcc",file_name),'wb') as f:
             save_data = (smple,target)
