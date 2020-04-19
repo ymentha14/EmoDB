@@ -5,6 +5,7 @@ from scipy.io import wavfile
 from pathlib import Path
 import pickle
 from speechpy.feature import mfcc
+import pandas as pd
 
 MAIN_DIR = "./"
 DATA_DIR = os.path.join(MAIN_DIR,"data")
@@ -31,6 +32,41 @@ FULL_EM = {'A':'Anger',
           'N':'Neutral'}
 
 DE2NUM = {item[0]:num for item,num in zip(DE2EN.items(),range(len(DE2EN)))}
+
+SPEAKER_DATA = [[3  , 'male',  31],
+                [8  , 'female',34 ],
+                [9  , 'female',21 ],
+                [10 , 'male',  32 ],
+                [11 , 'male',  26 ],
+                [12 , 'male',  30] ,
+                [13 , 'female',32], 
+                [14 , 'female',35] ,
+                [15 , 'male',  25] ,
+                [16 , 'female',31]]
+
+def parse_filename(filename):
+    """
+    parses the attributes of a given sample based on its filename
+    """
+    speaker_id = int(filename[:2])
+    text_id = filename[2:5]
+    emotion_de = filename[5]
+    emotion_en = DE2EN[emotion_de]
+    return speaker_id,text_id,emotion_en
+
+def load_pd_data(wav_dir=WAV_DIR):
+    for root, dirs, files in os.walk(wav_dir, topdown=False):
+        paths = [os.path.join(root,file) for file in files]
+        data = []
+        for file in files:
+            audio_data = wavfile.read(os.path.join(root,file))[1]
+            speaker_id,text_id,emotion_en = parse_filename(file)
+            row = [speaker_id,text_id,emotion_en,audio_data]
+            data.append(row)
+    res = pd.DataFrame(data,columns=["speaker_id","text_id","emotion","data"])
+    speaker_data = pd.DataFrame(SPEAKER_DATA,columns = ['speaker_id','sex','age'])
+    speaker_data.set_index('speaker_id',inplace=True)
+    return res.join(speaker_data,on="speaker_id")
 
 def zeropadd(data,mode='max'):
     if mode == 'max':
