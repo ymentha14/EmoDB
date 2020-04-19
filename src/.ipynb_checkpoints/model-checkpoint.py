@@ -6,6 +6,11 @@ import torch.optim as optim
 import pickle
 from IPython.display import clear_output
 from IPython.core.debugger import set_trace
+import tensorflow as tf
+from keras.wrappers.scikit_learn import KerasClassifier
+from keras.models import Sequential
+from keras.layers import LSTM, Dense, Dropout, Flatten, BatchNormalization
+from keras import optimizers
 
 import numpy as np
 from datetime import datetime
@@ -13,6 +18,9 @@ from misc_funcs import MFCC_DIR,MODEL_DIR,WAV_DIR,DE2EN,NUM2EN,FULL_EM,load_mfcc
 
 
 class CNN_classif(nn.Module):
+    """
+    
+    """
     def __init__(self):
         super(CNN_classif,self).__init__()
         self.convblock1 = nn.Sequential(
@@ -23,11 +31,15 @@ class CNN_classif(nn.Module):
                                 nn.Conv2d(8,8,kernel_size=13),
                                 nn.BatchNorm2d(8),
                                 nn.ReLU(),
-                                nn.MaxPool2d(kernel_size=(2,1)))
+                                nn.MaxPool2d(kernel_size=(2,1)),
+                                nn.Dropout(0.21),
+)
         self.convblock3 = nn.Sequential(
                                 nn.Conv2d(8,8,kernel_size=13),
                                 nn.BatchNorm2d(8),
-                                nn.ReLU())
+                                nn.ReLU(),
+                                nn.Dropout(0.21),
+)
         self.convblock4 = nn.Sequential(
                                 nn.Conv2d(8,8,kernel_size=2),
                                 nn.BatchNorm2d(8),
@@ -35,6 +47,7 @@ class CNN_classif(nn.Module):
                                 nn.MaxPool2d(kernel_size=(2,1)))
         self.linblock = nn.Sequential(
                                 nn.Flatten(),
+                                nn.Dropout(0.21),
                                 nn.Linear(896,64),
                                 nn.ReLU(),
                                 nn.Dropout(0.2),
@@ -119,3 +132,18 @@ def smart_model(file_name):
 if __name__ == '__main__':
     #run_model(data_f,targets,nb_epochs=1)
     print(smart_model('03a04Fd'))
+    
+def get_LSTM():
+    model = Sequential()
+    model.add(LSTM(240, input_shape=(275, 39)))
+    # model.add(Dropout(0.5))
+    model.add(Dense(32, activation="relu")),
+    model.add(BatchNormalization(axis=-1)),
+    model.add(Dense(16, activation="tanh"))
+    model.add(BatchNormalization(axis=-1))
+    model.add(Dense(7, activation="softmax"))
+    opt = optimizers.Adam(learning_rate=1e-3)
+    model.compile(
+        loss="binary_crossentropy", optimizer=opt, metrics=["accuracy"],
+    )
+    return model
