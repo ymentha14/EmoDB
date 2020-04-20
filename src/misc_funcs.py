@@ -1,3 +1,7 @@
+"""
+/src/misc-funcs.py: 
+miscellanous functions for loading, treating and transforming the data
+"""
 import numpy as np
 import os
 from IPython.core.debugger import set_trace
@@ -6,20 +10,24 @@ from pathlib import Path
 import pickle
 from speechpy.feature import mfcc
 import pandas as pd
+import librosa
 
+#############   directories paths   #############
 MAIN_DIR = "./"
 DATA_DIR = os.path.join(MAIN_DIR,"data")
 WAV_DIR = os.path.join(DATA_DIR,"wav")
 MFCC_DIR  = os.path.join(DATA_DIR,"mfcc")
 MODEL_DIR = os.path.join(MAIN_DIR,"models")
 
+
+#############   label dictionaries   #############
 DE2EN = {'W':'A', #Wut-Anger
          'L':'B', #Langeweile-Bordom
          'E':'D', #Ekel-Disgust
          'A':'F', #Angst-Fear
          'F':'H', #Freude-Happiness
-         'T':'S',
-         'N':'N'} #Traueer-Sadness
+         'T':'S', #Traueer-Sadness
+         'N':'N'} #Neutral
 EN2DE = {value:key for key,value in DE2EN.items()}
 EN2NUM = {item[1]:num for item,num in zip(DE2EN.items(),range(len(DE2EN)))}
 NUM2EN = {value:key for key,value in EN2NUM.items()}
@@ -30,9 +38,9 @@ FULL_EM = {'A':'Anger',
           'H':'Happiness',
           'S':'Sadness',
           'N':'Neutral'}
-
 DE2NUM = {item[0]:num for item,num in zip(DE2EN.items(),range(len(DE2EN)))}
 
+#############   Speakers Metadatas   #############
 SPEAKER_DATA = [[3  , 'male',  31],
                 [8  , 'female',34 ],
                 [9  , 'female',21 ],
@@ -47,6 +55,12 @@ SPEAKER_DATA = [[3  , 'male',  31],
 def parse_filename(filename):
     """
     parses the attributes of a given sample based on its filename
+    Args:
+        filename(str):filename of the wav file (ex:"03a01Fa")
+    Returns:
+        speaker_id(int):id of the speaker
+        text_id(str): id of the read text
+        emotion_en(str): char describing the english emotion
     """
     speaker_id = int(filename[:2])
     text_id = filename[2:5]
@@ -55,6 +69,13 @@ def parse_filename(filename):
     return speaker_id,text_id,emotion_en
 
 def load_pd_data(wav_dir=WAV_DIR):
+    """
+    Load the wav data with its metadats into a pandas DataFrame
+    Args:
+        wav_dir(str):path to the wav directory
+    Returns:
+        res(pd.DataFrame): pandas dataframe with metadatas cols=[speakerid,textid,emotion,data,sex,age]
+    """
     for root, dirs, files in os.walk(wav_dir, topdown=False):
         paths = [os.path.join(root,file) for file in files]
         data = []
@@ -69,10 +90,18 @@ def load_pd_data(wav_dir=WAV_DIR):
     return res.join(speaker_data,on="speaker_id")
 
 def zeropadd(data,mode='max'):
+    """
+    zero padds the audio files
+    Args:
+        mode(str):'max' or 'mean' if set to max, zero padds all the files to the max length of these files. Otherwise zero padds/cuts to the mean size.
+        data(np.array): audio data
+    Returns:
+        data_padded(int): same data as in the arg, but zeropadded
+    """
     if mode == 'max':
         new_len = max([x.shape[0] for x in data])
     else:
-        new_len = int(np.round(np.mean([x.shape[0] for x in data])))
+        new_len = int(np.round(np.mean([x.shape[0] for x in data])*1.5))
     def padd(x):
         diff = abs(new_len - x.shape[0])
         shift = diff %2
@@ -87,6 +116,16 @@ def zeropadd(data,mode='max'):
     return data_padded
 
 def load_wav_data(wav_dir=WAV_DIR):
+    """
+    load the wav data
+    Args:
+        wav_dir(str):path to the wav directory
+    Returns:
+        file_names(np.array(str)): names of the loaded files
+        sfs(np.array(int)): frequencies of the audio data
+        data(np.array): audio files
+        targets(np.array): targets of the audio files
+    """
     data,sfs,targets,file_names = [],[],[],[]
     for root, dirs, files in os.walk(wav_dir, topdown=False):
         for file in files:
@@ -104,10 +143,28 @@ def load_wav_data(wav_dir=WAV_DIR):
     return file_names[order],sfs[order],data[order],targets[order]
 
 def get_mfcc(data,sfs):
+    """
+    load the wav data
+    Args:
+        data(np.array): audio files
+        sfs(np.array(int)): frequencies of the audio data
+    Returns:
+        (np.array): mel-frequency cepstrum of the audio data
+    """
+    if isinstance(sfs,(int,np.int64)):
+        sfs = [sfs for i in range(len(data))]
     ret = np.array([mfcc(x,sf,num_cepstral=39) for x,sf in zip(data,sfs)])
     return np.expand_dims(ret,axis=1)
+    
 
 def save_mfcc_data(file_names,data_f,targets):
+    """
+    create mfcc directory and save the mfcc data for quicker load
+    Args:
+        file_names(np.array(str)): names of the loaded files
+        data_f(np.array): mfcc files
+        targets(np.array): targets of the audio files
+    """
     Path("data/mfcc").mkdir(parents=False, exist_ok=True)
     for file,smple,target in zip(file_names,data_f,targets):
         file_name = file +".pkl"
@@ -117,6 +174,11 @@ def save_mfcc_data(file_names,data_f,targets):
     print("Saving done!")
 
 def load_mfcc_data(mfcc_dir):
+    """
+    load previously saved mfcc data 
+    Args:
+        mfcc_dir(str): path of the directory of the mfcc data
+    """
     data = []
     targets = []
     filenames = []
