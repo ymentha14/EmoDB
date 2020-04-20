@@ -24,7 +24,8 @@ from misc_funcs import MFCC_DIR,MODEL_DIR,WEIGHT_DIR,WAV_DIR,DE2EN,NUM2EN,FULL_E
 
 class CNN_classif(nn.Module):
     """
-    CNN classifier
+    CNN classifier: inspired from "Emotion Recognition from Speech" (Kannan Venkataramanan,Haresh Rengaraj Rajamohan,2019)
+    https://www.researchgate.net/publication/338138024_Emotion_Recognition_from_Speech
 
     Attributes
     ----------
@@ -46,16 +47,19 @@ class CNN_classif(nn.Module):
         self.convblock2 = nn.Sequential(
                                 nn.Conv2d(8,8,kernel_size=13),
                                 nn.BatchNorm2d(8),
+                                nn.Dropout(0.3),
                                 nn.ReLU(),
                                 nn.MaxPool2d(kernel_size=(2,1)))
         self.convblock3 = nn.Sequential(
                                 nn.Conv2d(8,8,kernel_size=13),
                                 nn.BatchNorm2d(8),
+                                nn.Dropout(0.3),
                                 nn.ReLU())
 
         self.convblock4 = nn.Sequential(
                                 nn.Conv2d(8,8,kernel_size=2),
                                 nn.BatchNorm2d(8),
+                                nn.Dropout(0.3),
                                 nn.ReLU(),
                                 nn.MaxPool2d(kernel_size=(2,1)))
         self.linblock = nn.Sequential(

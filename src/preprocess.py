@@ -39,7 +39,7 @@ def add_shift(X,shift_max = 13000):
         X_shift[i] = x_smple
     return X_shift      
 
-def add_noise(X,noise_factor=3500):
+def add_noise(X,noise_factor=4000):
     """
     add a random noise to the elements in X
     Args:
