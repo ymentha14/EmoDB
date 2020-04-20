@@ -1,3 +1,8 @@
+keras
+sklearn
+librosa
+matplotlib
+pathlib
 skorch
 jupyterlab
 jupyter

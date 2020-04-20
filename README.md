@@ -37,6 +37,7 @@ In order to access the GUI of the flask API, just open a tab on the `5000` port.
     │   ├── mfcc                # mfcc converted files from wav directory
     │   ├── wav                 # wav files from the EmoDB dataset
     ├── docs                    # documentations
+    ├── results                 # results images
     ├── `Report_SER.ipynb`      # Complete analysis and results of the project
     ├── static                  # CSS files for the GUI
     ├── `build.sh`              # Bash executable to build the docker image

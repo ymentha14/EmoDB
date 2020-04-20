@@ -9,10 +9,11 @@ RUN mkdir src
 WORKDIR src/
 COPY requirements.txt requirements.txt
 RUN pip3 install -r requirements.txt
-COPY . .
 RUN mkdir data
 RUN apt-get install unzip 
+RUN yes|apt-get install libsndfile1
 ADD http://emodb.bilderbar.info/download/download.zip ./data/
 RUN unzip ./data/download.zip -d ./data
+COPY . .
 CMD ["python3","src/misc_funcs.py"]
 CMD ["./start.sh"]

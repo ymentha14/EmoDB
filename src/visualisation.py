@@ -11,6 +11,13 @@ COLOR_PALETTE = ["#f9ed69", "#f08a5d", "#b83b5e", "#00adb5", "#6a2c70", "#393e46
 
 
 def plot_metric(ax, metrics, metric_title):
+    """
+    plot the metric
+    Args:
+        ax(plt.ax):
+        metrics(list): values to plot
+        metric_title(str): "Accuracy" or "Loss"
+        """
     x_data = range(len(metrics))
     ax.plot(x_data, metrics[:, 0], color=COLOR_PALETTE[1], label="train")
     ax.plot(x_data, metrics[:, 1], color=COLOR_PALETTE[3], label="validation")

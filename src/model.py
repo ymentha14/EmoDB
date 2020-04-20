@@ -11,11 +11,10 @@ import torch.optim as optim
 import pickle
 from IPython.display import clear_output
 from IPython.core.debugger import set_trace
-import tensorflow as tf
-from keras.wrappers.scikit_learn import KerasClassifier
-from keras.models import Sequential
-from keras.layers import LSTM, Dense, Dropout, Flatten, BatchNormalization
-from keras import optimizers
+#from keras.wrappers.scikit_learn import KerasClassifier
+#from keras.models import Sequential
+#from keras.layers import LSTM, Dense, Dropout, Flatten, BatchNormalization
+#from keras import optimizers
 
 import numpy as np
 from datetime import datetime
@@ -67,7 +66,6 @@ class CNN_classif(nn.Module):
                                 nn.Linear(64,7))
         # 144<-->896
     def forward(self,x):
-        #set_trace()
         x = self.convblock1(x)
         x = self.convblock2(x)
         x = self.convblock3(x)
@@ -165,8 +163,7 @@ def run_model(nb_epochs=5):
     targets = torch.Tensor(targets).long()
     train_model_noval(model,data_f,targets.long(),nb_epochs)
     name = datetime.now().strftime("%m_%d_%H%M")
-    torch.save(model.state_dict(), "./models/{}".format(name))
-    torch.save(model.state_dict(), os.path.join(MODEL_DIR,name))
+    torch.save(model.state_dict(), os.path.join(WEIGHT_DIR,name))
 
 
 def compute_pred(file_name):
