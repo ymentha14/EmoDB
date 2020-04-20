@@ -1,5 +1,6 @@
 """
-/src/misc-funcs.py: miscellanous functions for loading, treating and transforming the data
+/src/misc-funcs.py: 
+miscellanous functions for loading, treating and transforming the data
 """
 import numpy as np
 import os
@@ -17,6 +18,7 @@ DATA_DIR = os.path.join(MAIN_DIR,"data")
 WAV_DIR = os.path.join(DATA_DIR,"wav")
 MFCC_DIR  = os.path.join(DATA_DIR,"mfcc")
 MODEL_DIR = os.path.join(MAIN_DIR,"models")
+WEIGHT_DIR = os.path.join(MODEL_DIR,"weights")
 
 
 #############   label dictionaries   #############
@@ -200,7 +202,6 @@ if __name__ == "__main__":
         DATA_DIR = "./data"
         WAV_DIR = os.path.join(DATA_DIR,"wav")
         assert(os.path.isdir(DATA_DIR))
-    print("hello",DATA_DIR)
     file_names,sfs,data,targets = load_wav_data()
     data_f = get_mfcc(data,sfs)
     save_mfcc_data(file_names,data_f,targets)

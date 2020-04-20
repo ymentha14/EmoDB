@@ -23,8 +23,7 @@ def home():
 @app.route('/trainmodel',methods=['GET'])
 def trainmodel():
     try:
-        set_trace()
-        nb_epoch = request.args['nb_epoch']
+        nb_epoch = int(request.args['nb_epoch'])
         run_model(nb_epochs=nb_epoch)
         resp = jsonify(success=True)
         resp.status_code = 200
@@ -47,7 +46,9 @@ def predict():
     try:
         file_name = request.args.get('filename')
         prediction = compute_pred(file_name)
-        return jsonify(prediction)
+        resp = jsonify(prediction)
+        resp.status_code = 200
+        return resp
     except:
         #TODO: handle better the exceptions s.t. a clean messages displays in PostMan
         resp = jsonify(success=False)
@@ -59,8 +60,9 @@ def predictJSON():
     try:
         data = request.get_json(force=True)
         prediction = {val[0]:compute_pred(val[1]) for val in data.items()}
-
-        return jsonify(prediction)
+        resp = jsonify(prediction)
+        resp.status_code = 200
+        return resp
     except:
         resp = jsonify(success=False)
         resp.status_code = 201

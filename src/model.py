@@ -19,7 +19,7 @@ from keras import optimizers
 
 import numpy as np
 from datetime import datetime
-from misc_funcs import MFCC_DIR,MODEL_DIR,WAV_DIR,DE2EN,NUM2EN,FULL_EM,load_mfcc_data,get_mfcc
+from misc_funcs import MFCC_DIR,MODEL_DIR,WEIGHT_DIR,WAV_DIR,DE2EN,NUM2EN,FULL_EM,load_mfcc_data,get_mfcc
 
 
 
@@ -77,17 +77,17 @@ class CNN_classif(nn.Module):
     
 MODEL = CNN_classif()
 
-def load_most_recent(model,model_dir):
+def load_most_recent(model):
     """
     loads the weights of the most recently computed network in the `models` directory into the attribute model
     Args:
         model(CNN_classif): model to load the weights in
         model_dir: path to the directory where the weights are stored
     """
-    file_name = max([file  for root, dirs, files in os.walk(MODEL_DIR, topdown=False) for file in files])
+    file_name = max([file  for root, dirs, files in os.walk(WEIGHT_DIR, topdown=False) for file in files])
     print("Loading {}".format(file_name))
 
-    model.load_state_dict(torch.load(os.path.join(model_dir,file_name)))
+    model.load_state_dict(torch.load(os.path.join(WEIGHT_DIR,file_name)))
     #necessary for systematic results with the dropout layers
     model.eval()
 
@@ -126,6 +126,33 @@ def train_model(model, X_train, y_train,X_test,y_test,nb_epochs=5,lr=1e-4,optimz
             callback(model,X_train,X_test,history,criterion)
     return history
 
+def train_model_noval(model, X_train, y_train,nb_epochs=5,lr=2e-4,optimz = optim.AdamW):
+    """
+    trains the model passed in attribute
+    Args:
+        model(CNN_classif): model to train
+        X_train(torch.Tensor):
+        y_train(torch.Tensor):
+        nb_epochs(int)
+        lr(float)
+        optimz(torch.optim)
+    """
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optimz(model.parameters(), lr = lr)
+    batch_size = 20
+    print("Start training Model")
+    for e in range(nb_epochs):
+        print("Epoch:{}/{}".format(e,nb_epochs))
+        for X_batch,y_batch in zip(X_train.split(batch_size),
+                                y_train.split(batch_size)):
+            output_batch = model(X_batch)
+            loss = criterion(output_batch,y_batch)
+            model.zero_grad()
+            loss.backward()
+            optimizer.step()
+    
+
+
 def run_model(nb_epochs=5):
     """
     train and save the model 
@@ -136,7 +163,7 @@ def run_model(nb_epochs=5):
     model = CNN_classif()
     data_f = torch.Tensor(data_f)
     targets = torch.Tensor(targets).long()
-    train_model(model,data_f,targets.long(),nb_epochs)
+    train_model_noval(model,data_f,targets.long(),nb_epochs)
     name = datetime.now().strftime("%m_%d_%H%M")
     torch.save(model.state_dict(), "./models/{}".format(name))
     torch.save(model.state_dict(), os.path.join(MODEL_DIR,name))
@@ -150,7 +177,7 @@ def compute_pred(file_name):
     Returns:
         (dic): dictionary containing the true target and the predicted one
     """
-    load_most_recent(MODEL,MODEL_DIR)
+    load_most_recent(MODEL)
     target0 = FULL_EM[DE2EN[file_name[5]]]
     #load the corresonding mfcc file
     with open(os.path.join(MFCC_DIR,file_name + ".pkl"),'rb') as f:

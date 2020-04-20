@@ -27,12 +27,16 @@ In order to access the GUI of the flask API, just open a tab on the `5000` port.
     ├── src                     # Source files
     │   ├── `misc_funcs.py`     # Miscellanous functions for data preparation/cleaning
     │   ├── `model.py`          # Classes and methods to perform the proper modelling
+    │   ├── `visualisation.py`  # Methods to visualize the datas
+    │   ├── `preprocess.py`     # Preprocessing methods (e.g. data augmentation etc)
     ├── lib                     # Modified libraries the project depends on
-    │   ├── pytorch-cnn-viz     # Allows to perform filter visualisation
-    ├── models                  # directory where we save the fitted models
+    │   ├── pytorch-cnn-viz     # Allows to generate class maximum output images
+    ├── models                  # directory where we save the fitted models(.pkl,.json)
+    │   ├── weights             # directory where we save the weights for  CNN_classif objects
     ├── data
     │   ├── mfcc                # mfcc converted files from wav directory
     │   ├── wav                 # wav files from the EmoDB dataset
+    ├── docs                    # documentations
     ├── `Report_SER.ipynb`      # Complete analysis and results of the project
     ├── static                  # CSS files for the GUI
     ├── `build.sh`              # Bash executable to build the docker image
@@ -41,81 +45,80 @@ In order to access the GUI of the flask API, just open a tab on the `5000` port.
     └── `README.md`
 
 ## Flask API commands
+A GUI shows up if you open the http://127.0.0.1:5000/: enter the filename in the main field to obtain the prediction of the most recently compute d model.
 **TrainModel**
 ----
-  <_Additional information about your API call. Try to use verbs that match both request type (fetching vs modifying) and plurality (one vs multiple)._>
+**URL**: `/trainmodel`
 
-* **URL**
-
-  `/trainmodel`
-
-* **Method:**
+**Method:**: `GET` 
   
-  `GET` 
-  
-*  **URL Params**
+**URL Params**: `n_epoch=[integer]`: number of epochs to run the model for
 
-   `n_epochs=[integer]`: number of epochs to run the model for
+**Success Response Code:**   200 
 
-* **Data Params**
+**Error Response Code:** 201
 
-  <_If making a post request, what should the body payload look like? URL Params rules apply here too._>
+**Return**: `None`
 
-* **Success Response:**
-  
-  * **Code:** 200 <br />
-* **Error Response:**
-  * **Code:** 201  <br />
+**Sample Call: **`curl http://127.0.0.1:5000/trainmodel?nb_epoch=1`
 
-* **Sample Call:**
-
-  `curl -GET localhost:5000`
-* **Notes:**
-
-  <_This is where all uncertainties, commentary, discussion etc. can go. I recommend timestamping and identifying oneself when leaving comments here._> 
 **Predict**
 ----
-  <_Additional information about your API call. Try to use verbs that match both request type (fetching vs modifying) and plurality (one vs multiple)._>
+**URL**: `/predict`
 
-* **URL**
-
-  `/trainmodel`
-
-* **Method:**
+**Method:**: `POST` 
   
-  `GET` 
+**URL Params**: `filename=[string]`: name of the file to receive a prediction for.
+
+**Success Response Code:**   200
+
+**Error Response Code:** 201 
+
+**Return**: {
+  "predicted": &lt;derp predicted_emotion&gt;, 
+  "true_label": "&lt;true_emotion&gt;"
+}
+
+
+**Sample Call: ** `curl -X POST http://127.0.0.1:5000/predict?filename=03a07La`
+
+
+**PredictJSON**
+----
+
+**URL**: `/predict`
+
+**Method:**: `POST` 
   
-*  **URL Params**
+**URL Params**: `None`
 
-   `n_epochs=[integer]`: number of epochs to run the model for
+**Data Params**: json file associating string values corresponding to the filenames to some keys. Example: <br>
+{
+	"key1":"03a04Wc",
+	"key2":"12a02Ec",
+  ...
+}
 
-* **Data Params**
 
-  <_If making a post request, what should the body payload look like? URL Params rules apply here too._>
+**Success Response Code:**   200 
 
-* **Success Response:**
-  
-  <_What should the status code be on success and is there any returned data? This is useful when people need to to know what their callbacks should expect!_>
+**Error Response Code:** 201 
 
-  * **Code:** 200 <br />
-    **Content:** `{ id : 12 }`
- 
-* **Error Response:**
+**Return**: 
 
-  <_Most endpoints will have many ways they can fail. From unauthorized access, to wrongful parameters etc. All of those should be liste d here. It might seem repetitive, but it helps prevent assumptions from being made where they should be._>
+{
+  "key1": {
+    "predicted": "&lt;predicted_emotion1&gt;", 
+    "true_label": "&lt;true_emotion1&gt;"
+  }, 
 
-  * **Code:** 401 UNAUTHORIZED <br />
-    **Content:** `{ error : "Log in" }`
 
-  OR
+  "key2": {
+    "predicted": &lt;predicted_emotion2&gt;, 
+    "true_label": "&lt;true_emotion2&gt;"
+  }, 
 
-  * **Code:** 422 UNPROCESSABLE ENTRY <br />
-    **Content:** `{ error : "Email Invalid" }`
+  ...
+}
 
-* **Sample Call:**
-
-  <_Just a sample call to your endpoint in a runnable format ($.ajax call or a curl request) - this makes life easier and more predictable._> 
-
-* **Notes:**
-
-  <_This is where all uncertainties, commentary, discussion etc. can go. I recommend timestamping and identifying oneself when leaving comments here._> 
+**Sample Call:** `curl -X POST -d @data.json http://127.0.0.1:5000/predictJSON  --header "Content-Type:application/json"`

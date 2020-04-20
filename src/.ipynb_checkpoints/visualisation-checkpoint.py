@@ -35,12 +35,12 @@ def plot_metrics(history):
     fig.savefig("regularized.png")
     
 def vis_sample(sample,title=None):
-     """
+    """
     visualize mfcc samples
     Args:
         sample(np.array): mfcc coefficient of a wav file to visualize as a single layered image
     """
-    fig, ax = plt.subplots(figsize=(15, 15))
+    fig, ax = plt.subplots(1,figsize=(15, 15))
     plt.imshow(np.transpose(sample), cmap="gray")
     if title is not None:
         fig.savefig('results/'+title+'.png')
